@@ -321,7 +321,10 @@ else ifeq ($(platform), libnx)
 
 # Emscripten
 else ifeq ($(platform), emscripten)
-   TARGET := $(TARGET_NAME)_libretro_$(platform).bc
+   TARGET := $(TARGET_NAME)_libretro_$(platform).a
+   CC = emcc
+   CXX = em++
+   AR = emar
    PLATFORM_DEFINES := -DUSE_FILE32API
    ENDIANNESS_DEFINES := -DNO_UNALIGNED_MEM
    EXTERNAL_ZLIB = 1

@@ -561,9 +561,14 @@ static void pf_update(INT32 tmap, INT32 scrollx, INT32 scrolly, UINT16 *rowscrol
 
 		INT32 xscroll = scrollx + deco16_global_x_offset + deco16_scroll_offset[tmap][size/16][0];
 
+		// the rowscroll bands belong to rows of the tilemap, not of the screen,
+		// so they must be shifted by the layer's y-scroll to find the screen
+		// line each band lands on.
+		INT32 yoffset = scrolly + deco16_global_y_offset;
+
 		for (INT32 r = 0; r < rows; r++) {
 			for (INT32 p = rsize * r; p < (rsize * r) + rsize; p++) {
-				deco16_scroll_x[tmap][(p - deco16_global_y_offset) & 0x1ff] = xscroll + BURN_ENDIAN_SWAP_INT16(rowscroll[r]);
+				deco16_scroll_x[tmap][(p - yoffset) & (rownum - 1)] = xscroll + BURN_ENDIAN_SWAP_INT16(rowscroll[r]);
 			}
 		}
 
@@ -595,15 +600,19 @@ static void pf_update(INT32 tmap, INT32 scrollx, INT32 scrolly, UINT16 *rowscrol
 
 		INT32 rsize = colnum / cols;
 
+		INT32 xscroll = scrollx + deco16_global_x_offset + deco16_scroll_offset[tmap][size/16][0];
+
+		// likewise, the colscroll bands belong to columns of the tilemap and must
+		// be shifted by the layer's x-scroll to find the screen column each band
+		// lands on - without this the per-column offsets stay glued to the screen
+		// and the layer falls apart as soon as it scrolls (cninja, volcano stage).
 		for (INT32 r = 0; r < cols; r++) {
 			for (INT32 p = rsize * r; p < (rsize * r) + rsize; p++) {
-				deco16_scroll_y[tmap][p] = scrolly + BURN_ENDIAN_SWAP_INT16(rowscroll[(r & mask) + 0x200]) + deco16_global_y_offset;
+				deco16_scroll_y[tmap][(p - xscroll) & (colnum - 1)] = scrolly + BURN_ENDIAN_SWAP_INT16(rowscroll[(r & mask) + 0x200]) + deco16_global_y_offset;
 			}
 		}
 
 		if (~control1 & 0x40) {
-			INT32 xscroll = scrollx + deco16_global_x_offset + deco16_scroll_offset[tmap][size/16][0];
-
 			for (INT32 r = 0; r < 512; r++) {
 				deco16_scroll_x[tmap][(r - deco16_global_y_offset) & 0x1ff] = xscroll;
 			}

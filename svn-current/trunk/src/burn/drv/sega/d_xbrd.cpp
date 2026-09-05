@@ -2283,12 +2283,14 @@ static UINT8 AburnerProcessAnalogControls(UINT16 value)
 				temp = 0x80 + (System16AnalogPort2 >> 4);
 			}
 
-			if (temp > 0xc0) {
+			// The frontends can only reach 0x40 - 0xbf, so the thresholds have to
+			// stay inside that range or the throttle would always be in the middle
+			if (temp > 0xa0) {
 				temp = 0xff;
 				return temp;
 			}
 
-			if (temp < 0x40) {
+			if (temp < 0x60) {
 				temp = 0;
 				return temp;
 			}

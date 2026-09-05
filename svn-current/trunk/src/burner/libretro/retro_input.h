@@ -24,6 +24,10 @@ struct AxiBind
 	unsigned id_neg;
 #endif
 	int index;
+	// Digital fallback (d-pad/keyboard) used when the analog axis reads 0,
+	// for games whose axis has no digital equivalent (see After Burner)
+	unsigned dpad_neg;
+	unsigned dpad_pos;
 };
 
 #define RETROPAD_CLASSIC	RETRO_DEVICE_ANALOG

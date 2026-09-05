@@ -205,6 +205,15 @@ static inline int CinpJoyAxis(int port, int axis)
 		// Fallback if analog trigger requested but not supported
 		if (ret == 0 && index == RETRO_DEVICE_INDEX_ANALOG_BUTTON)
 			ret = input_cb_wrapper(port, RETRO_DEVICE_JOYPAD, 0, sAxiBinds[port][axis].id) ? 0x7FFF : 0;
+		// Fallback on digital buttons (d-pad, keyboard) when the analog stick is
+		// idle/unavailable, for axis which were declared with such a fallback
+		if (ret == 0 && sAxiBinds[port][axis].dpad_pos != RETRO_DEVICE_ID_JOYPAD_EMPTY)
+		{
+			if (input_cb_wrapper(port, RETRO_DEVICE_JOYPAD, 0, sAxiBinds[port][axis].dpad_pos))
+				ret = 0x7FFF;
+			else if (input_cb_wrapper(port, RETRO_DEVICE_JOYPAD, 0, sAxiBinds[port][axis].dpad_neg))
+				ret = -0x7FFF;
+		}
 		return ret;
 #ifdef RETRO_INPUT_DEPRECATED
 	}
@@ -304,6 +313,8 @@ static INT32 GameInpAnalog2RetroInpAnalog(struct GameInp* pgi, unsigned port, un
 			pgi->Input.JoyAxis.nJoy = (UINT8)port;
 			sAxiBinds[port][axis].index = index;
 			sAxiBinds[port][axis].id = id;
+			sAxiBinds[port][axis].dpad_neg = RETRO_DEVICE_ID_JOYPAD_EMPTY;
+			sAxiBinds[port][axis].dpad_pos = RETRO_DEVICE_ID_JOYPAD_EMPTY;
 			retro_input_descriptor descriptor;
 			descriptor.port = port;
 			descriptor.device = (index == RETRO_DEVICE_INDEX_ANALOG_BUTTON ? RETRO_DEVICE_JOYPAD : RETRO_DEVICE_ANALOG);
@@ -368,6 +379,29 @@ static INT32 GameInpAnalog2RetroInpAnalog(struct GameInp* pgi, unsigned port, un
 		}
 	}
 	bButtonMapped = true;
+	return 0;
+}
+
+// Analog to analog mapping, with a fallback on 2 digital buttons (usually the d-pad)
+// Needed by games whose stick is analog only : without this they are unplayable
+// with a keyboard or a d-pad only controller (see After Burner)
+static INT32 GameInpAnalog2RetroInpAnalogDpad(struct GameInp* pgi, unsigned port, unsigned axis, unsigned id, int index, char *szn, unsigned dpad_neg, unsigned dpad_pos)
+{
+	if(bButtonMapped) return 0;
+	GameInpAnalog2RetroInpAnalog(pgi, port, axis, id, index, szn);
+	sAxiBinds[port][axis].dpad_neg = dpad_neg;
+	sAxiBinds[port][axis].dpad_pos = dpad_pos;
+
+	retro_input_descriptor descriptor;
+	descriptor.port = port;
+	descriptor.device = RETRO_DEVICE_JOYPAD;
+	descriptor.index = 0;
+	descriptor.id = dpad_neg;
+	descriptor.description = szn;
+	normal_input_descriptors.push_back(descriptor);
+	descriptor.id = dpad_pos;
+	normal_input_descriptors.push_back(descriptor);
+
 	return 0;
 }
 
@@ -702,6 +736,24 @@ static INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, ch
 		}
 		if (strcmp("Shift Up", description) == 0) {
 			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_R, description);
+		}
+	}
+
+	// After Burner
+	// After Burner II
+	// The flight stick is analog only, so the game can't be played at all with a
+	// keyboard or a d-pad only controller : add a digital fallback on the d-pad
+	if ((parentrom && strcmp(parentrom, "aburner2") == 0) ||
+		(drvname && strcmp(drvname, "aburner2") == 0)
+	) {
+		if (strcmp("Left/Right", description) == 0) {
+			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		}
+		if (strcmp("Up/Down", description) == 0) {
+			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 1, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, RETRO_DEVICE_ID_JOYPAD_UP, RETRO_DEVICE_ID_JOYPAD_DOWN);
+		}
+		if (strcmp("Throttle", description) == 0) {
+			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 2, RETRO_DEVICE_ID_ANALOG_Y, RETRO_DEVICE_INDEX_ANALOG_RIGHT, description, RETRO_DEVICE_ID_JOYPAD_L, RETRO_DEVICE_ID_JOYPAD_R);
 		}
 	}
 

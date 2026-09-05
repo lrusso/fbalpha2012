@@ -2232,22 +2232,22 @@ static UINT8 AburnerProcessAnalogControls(UINT16 value)
 	switch (value) {
 		// Left / Right
 		case 0: {
-			// The libretro analog path can only hand the driver about 65% of the
-			// stick's travel - a full deflection arrives here as 0x40 / 0xbf, not
-			// as the 0x20 / 0xe0 this code clamps to. Banking is therefore capped
-			// short, and that reduced maximum bank happens to be the exact angle
-			// where After Burner's own horizon strips fall one segment short, so
-			// the haze band visibly ends near the top corner of the screen while
-			// the stick is held over. Stretch the axis so a full deflection really
-			// reaches the range the game expects.
-			INT32 nAxis = ((INT32)(INT16)System16AnalogPort0) >> 4;
+			// Prevent CHAR data overflow
+			if((System16AnalogPort0 >> 4) > 0x7f && (System16AnalogPort0 >> 4) <= 0x80) {
+				temp = 0x80 + 0x7f;
+			} else {
+				temp = 0x80 + (System16AnalogPort0 >> 4);
+			}
 
-			nAxis = (nAxis * 0x60) / 0x3f;
+			if (temp < 0x20) {
+				temp = 0x20;
+				return temp;
+			}
 
-			if (nAxis < -0x60) nAxis = -0x60;
-			if (nAxis >  0x60) nAxis =  0x60;
-
-			temp = (UINT8)(0x80 + nAxis);
+			if (temp > 0xe0) {
+				temp = 0xe0;
+				return temp;
+			}
 
 			return temp;
 		}

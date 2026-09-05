@@ -2232,22 +2232,22 @@ static UINT8 AburnerProcessAnalogControls(UINT16 value)
 	switch (value) {
 		// Left / Right
 		case 0: {
-			// Prevent CHAR data overflow
-			if((System16AnalogPort0 >> 4) > 0x7f && (System16AnalogPort0 >> 4) <= 0x80) {
-				temp = 0x80 + 0x7f;
-			} else {
-				temp = 0x80 + (System16AnalogPort0 >> 4);
-			}
+			// The libretro analog path can only hand the driver about 65% of the
+			// stick's travel - a full deflection arrives here as 0x40 / 0xbf, not
+			// as the 0x20 / 0xe0 this code clamps to. Banking is therefore capped
+			// short, and that reduced maximum bank happens to be the exact angle
+			// where After Burner's own horizon strips fall one segment short, so
+			// the haze band visibly ends near the top corner of the screen while
+			// the stick is held over. Stretch the axis so a full deflection really
+			// reaches the range the game expects.
+			INT32 nAxis = ((INT32)(INT16)System16AnalogPort0) >> 4;
 
-			if (temp < 0x20) {
-				temp = 0x20;
-				return temp;
-			}
+			nAxis = (nAxis * 0x60) / 0x3f;
 
-			if (temp > 0xe0) {
-				temp = 0xe0;
-				return temp;
-			}
+			if (nAxis < -0x60) nAxis = -0x60;
+			if (nAxis >  0x60) nAxis =  0x60;
+
+			temp = (UINT8)(0x80 + nAxis);
 
 			return temp;
 		}
@@ -2312,6 +2312,17 @@ static INT32 Aburner2Init()
 	
 	if (!nRet) {
 		System16RoadPriority = 0;
+
+		// After Burner's road gfx have a 2 pixel dead margin at the start of
+		// every line - columns 0 and 1 always decode to 3 (the road background
+		// colour) and the gfx themselves only start at column 2. That holds for
+		// every line of both road banks. The game parks the road window flush
+		// with the left hand side of the screen, so with the generic X-Board
+		// origin those two dead columns end up on screen and show as a 2 pixel
+		// vertical line in the road background colour - the haze / sky colour,
+		// which is why it changes from stage to stage. Nudge the road origin
+		// along by 2 so the margin falls outside the visible area again.
+		System16RoadXOffset = -168;
 	}
 
 	return nRet;

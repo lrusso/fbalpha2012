@@ -757,6 +757,22 @@ static INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, ch
 		}
 	}
 
+	// Arkanoid
+	// Tournament Arkanoid
+	// Arkanoid - Revenge of DOH
+	// The paddle is an analog dial only, so the game can't be played at all with a
+	// keyboard or a d-pad only controller : add a digital fallback on the d-pad
+	if ((parentrom && strcmp(parentrom, "arkanoid") == 0) ||
+		(drvname && strcmp(drvname, "arkanoid") == 0) ||
+		(drvname && strcmp(drvname, "arkatour") == 0) ||
+		(parentrom && strcmp(parentrom, "arknoid2") == 0) ||
+		(drvname && strcmp(drvname, "arknoid2") == 0)
+	) {
+		if (strcmp("Right / left", description) == 0) {
+			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		}
+	}
+
 	// Golden Axe
 	// Use same layout as megadrive cores
 	if ((parentrom && strcmp(parentrom, "goldnaxe") == 0) ||

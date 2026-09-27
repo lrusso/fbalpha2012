@@ -62,6 +62,7 @@ extern UINT8 *System16Prom;
 extern UINT8 *System16Key;
 extern UINT8 *System16Ram;
 extern UINT8 *System16ExtraRam;
+extern UINT8 *System16BackupRam;
 extern UINT8 *System16Z80Ram;
 extern UINT8 *System16TempGfx;
 extern UINT8 *System16TileRam;

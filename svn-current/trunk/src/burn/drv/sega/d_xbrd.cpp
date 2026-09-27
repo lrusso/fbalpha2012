@@ -2457,8 +2457,26 @@ static INT32 LoffireInit()
 	BurnGunInit(2, true);
 	
 	System16ProcessAnalogControlsDo = LoffireProcessAnalogControls;
-	
-	return System16Init();
+
+	INT32 nRet = System16Init();
+
+	if (!nRet) {
+		// The game keeps its gun calibration in the backup ram, and while there is
+		// none it boots on "GUN ADJUST ERROR" followed by the calibration screen.
+		// Start with the calibration of guns matching the crosshairs (both guns
+		// aimed at the flash points, stored as the game does, with its checksum) :
+		// a saved nvram is loaded after this, and replaces it when there is one
+		static const UINT16 Calibration[4] = { 0x06f6, 0xf80a, 0x06f6, 0xf80a };
+		UINT16 *Ram = (UINT16*)System16BackupRam;
+
+		for (INT32 i = 0; i < 4; i++) {
+			Ram[(0x40 / 2) + i] = BURN_ENDIAN_SWAP_INT16(Calibration[i]);
+			Ram[(0xa0 / 2) + i] = BURN_ENDIAN_SWAP_INT16(Calibration[i]);
+		}
+		Ram[0xde / 2] = BURN_ENDIAN_SWAP_INT16(0x80bf);
+	}
+
+	return nRet;
 }
 
 static UINT8 RacheroProcessAnalogControls(UINT16 value)

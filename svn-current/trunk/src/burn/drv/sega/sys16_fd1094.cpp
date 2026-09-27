@@ -17,6 +17,8 @@ static INT32 fd1094_selected_state;
 
 static INT32 nFD1094CPU = 0;
 
+static bool bFD1094Loffire = false; // Line of Fire / Bakudan Yarou (all sets)
+
 bool System18Banking;
 /*
 static void *fd1094_get_decrypted_base(void)
@@ -45,7 +47,10 @@ static void fd1094_setstate_and_decrypt(INT32 state)
 	fd1094_state = state;
 
 	// force a flush of the prefetch cache
-	m68k_set_reg(M68K_REG_PREF_ADDR, 0x1000);
+	// Line of Fire leaves its gun calibration with a RTE to 0x1000, which ran stale
+	// data, crashed and lost the calibration : use an address the cpu can never
+	// prefetch from (prefetches are 4 bytes aligned) for this game
+	m68k_set_reg(M68K_REG_PREF_ADDR, bFD1094Loffire ? 0xffffffff : 0x1000);
 	
 	/* set the FD1094 state ready to decrypt.. */
 	state = fd1094_set_state(fd1094_key,state);
@@ -183,6 +188,9 @@ void fd1094_driver_init(INT32 nCPU)
 	INT32 i;
 	
 	nFD1094CPU = nCPU;
+
+	const char *pszName = BurnDrvGetTextA(DRV_NAME);
+	bFD1094Loffire = pszName && (strcmp(pszName, "loffire") == 0 || strcmp(pszName, "loffirej") == 0 || strcmp(pszName, "loffireu") == 0);
 
 	if (nFD1094CPU == 0) {
 		fd1094_cpuregion = (UINT16*)System16Rom;

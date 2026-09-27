@@ -2972,7 +2972,9 @@ static UINT8 TopspeedInputBypassRead()
 {
 	UINT8 Port = TC0220IOCPortRead();
 	
-	INT32 Steer = (TaitoAnalogPort0 >> 4);
+	// The inputs only write the low 16 bits of the port : sign extend them, or
+	// steering left reads as a huge value (0x0fc0 instead of 0xffc0 for -0x40)
+	INT32 Steer = ((INT16)TaitoAnalogPort0 >> 4);
 	
 	switch (Port) {
 		case 0x0c: {

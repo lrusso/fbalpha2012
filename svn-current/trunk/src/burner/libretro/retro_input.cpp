@@ -764,6 +764,17 @@ static INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, ch
 		}
 	}
 
+	// Top Speed
+	// The steering is analog only, so the game can't be played at all with a
+	// keyboard or a d-pad only controller : add a digital fallback on the d-pad
+	if ((parentrom && strcmp(parentrom, "topspeed") == 0) ||
+		(drvname && strcmp(drvname, "topspeed") == 0)
+	) {
+		if (strcmp("Steering", description) == 0) {
+			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		}
+	}
+
 	// Arkanoid
 	// Tournament Arkanoid
 	// Arkanoid - Revenge of DOH

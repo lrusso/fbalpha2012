@@ -707,11 +707,18 @@ static INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, ch
 		(parentrom && strcmp(parentrom, "hangonjr") == 0) ||
 		(drvname && strcmp(drvname, "hangonjr") == 0)
 	) {
+		// The steering is analog only, so the game can't be played at all with a
+		// keyboard or a d-pad only controller : add a digital fallback on the d-pad
+		if (strcmp("Steering", description) == 0) {
+			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT);
+		}
+		// Accelerate and brake are on/off only in these drivers, so map them on face
+		// buttons instead of L2/R2, which a keyboard or a d-pad only controller may lack
 		if (strcmp("Accelerate", description) == 0) {
-			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 2, RETRO_DEVICE_ID_JOYPAD_R2, RETRO_DEVICE_INDEX_ANALOG_BUTTON, description);
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_Y, description);
 		}
 		if (strcmp("Brake", description) == 0) {
-			GameInpAnalog2RetroInpAnalog(pgi, nPlayer, 3, RETRO_DEVICE_ID_JOYPAD_L2, RETRO_DEVICE_INDEX_ANALOG_BUTTON, description);
+			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_X, description);
 		}
 		if (strcmp("Gear", description) == 0) {
 			GameInpDigital2RetroInpKey(pgi, nPlayer, RETRO_DEVICE_ID_JOYPAD_B, description);

@@ -748,10 +748,13 @@ static INT32 GameInpSpecialOne(struct GameInp* pgi, INT32 nPlayer, char* szi, ch
 
 	// After Burner
 	// After Burner II
+	// Strike Fighter
 	// The flight stick is analog only, so the game can't be played at all with a
 	// keyboard or a d-pad only controller : add a digital fallback on the d-pad
 	if ((parentrom && strcmp(parentrom, "aburner2") == 0) ||
-		(drvname && strcmp(drvname, "aburner2") == 0)
+		(drvname && strcmp(drvname, "aburner2") == 0) ||
+		(parentrom && strcmp(parentrom, "strkfgtr") == 0) ||
+		(drvname && strcmp(drvname, "strkfgtr") == 0)
 	) {
 		if (strcmp("Left/Right", description) == 0) {
 			GameInpAnalog2RetroInpAnalogDpad(pgi, nPlayer, 0, RETRO_DEVICE_ID_ANALOG_X, RETRO_DEVICE_INDEX_ANALOG_LEFT, description, RETRO_DEVICE_ID_JOYPAD_LEFT, RETRO_DEVICE_ID_JOYPAD_RIGHT);

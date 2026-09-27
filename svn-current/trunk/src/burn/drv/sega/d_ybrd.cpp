@@ -1797,6 +1797,31 @@ UINT8 RchaseProcessAnalogControls(UINT16 value)
 	return 0;
 }
 
+UINT8 StrkfgtrProcessAnalogControls(UINT16 value)
+{
+	switch (value) {
+
+		// Throttle
+		// The frontends can only reach 0x40 - 0xbf, so the thresholds have to
+		// stay inside that range or the throttle would always be in the middle
+		case 4: {
+			UINT8 temp = 0x80 + (System16AnalogPort2 >> 4);
+			if (temp > 0xa0) return 0xff;
+			if (temp < 0x60) return 0;
+			return 0x80;
+		}
+
+		// Left/Right
+		// The game banks much harder than G-LOC for the same stick position,
+		// which is too much on a d-pad : only give 95% of the stick travel
+		case 5: {
+			return 0x80 + ((INT16)System16AnalogPort0 >> 4) * 95 / 100;
+		}
+	}
+
+	return GlocProcessAnalogControls(value);
+}
+
 static INT32 Gforce2Init()
 {
 	System16ProcessAnalogControlsDo = Gforce2ProcessAnalogControls;
@@ -1868,6 +1893,13 @@ static INT32 RchaseInit()
 	BurnGunInit(2, false);
 	
 	System16ProcessAnalogControlsDo = RchaseProcessAnalogControls;
+	
+	return System16Init();
+}
+
+static INT32 StrkfgtrInit()
+{
+	System16ProcessAnalogControlsDo = StrkfgtrProcessAnalogControls;
 	
 	return System16Init();
 }
@@ -2010,6 +2042,6 @@ struct BurnDriver BurnDrvStrkfgtr = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_SEGA_SYSTEMY, GBF_SHOOT, 0,
 	NULL, StrkfgtrRomInfo, StrkfgtrRomName, NULL, NULL, GlocInputInfo, StrkfgtrDIPInfo,
-	GlocInit, YBoardExit, YBoardFrame, NULL, YBoardScan,
+	StrkfgtrInit, YBoardExit, YBoardFrame, NULL, YBoardScan,
 	NULL, 0x6000, 320, 224, 4, 3
 };

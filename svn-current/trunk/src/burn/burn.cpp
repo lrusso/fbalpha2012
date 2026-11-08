@@ -7,6 +7,8 @@
 #include "driverlist-gx.h"
 #elif defined(CPS1_ONLY)
 #include "driverlist_cps1.h"
+#elif defined(SSF2U_ONLY)
+#include "driverlist_ssf2u.h"
 #elif defined(CPS2_ONLY)
 #include "driverlist_cps2.h"
 #elif defined(CPS3_ONLY)

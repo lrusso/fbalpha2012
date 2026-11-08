@@ -48,6 +48,9 @@ ifeq ($(target),cps1)
 else ifeq ($(target),cps2)
    TARGET_NAME := fbalpha2012_cps2
    FBA_DEFINES += -DTARGET=\"\ CPS-2\" -DCPS2_ONLY
+else ifeq ($(target),ssf2u)
+   TARGET_NAME := fbalpha2012_ssf2u
+   FBA_DEFINES += -DTARGET=\"\ CPS-2\" -DSSF2U_ONLY
 else ifeq ($(target),cps3)
    TARGET_NAME := fbalpha2012_cps3
    FBA_DEFINES += -DTARGET=\"\ CPS-3\" -DCPS3_ONLY

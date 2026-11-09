@@ -12635,6 +12635,55 @@ static INT32 TwelveMhzInit()
 	return DrvInit();
 }
 
+// What Cadillacs and Dinosaurs writes to a blank EEPROM on its first boot, except that
+// "Demo Sound" in the System Configuration (byte 0x0a) is On instead of Off, so the attract
+// mode has sound from the start instead of only after changing it in the Service Mode.
+// It is skipped when a saved .nv exists.
+static const UINT8 DinoEepromDefault[128] = {
+	0x92, 0x11, 0x02, 0x00, 0x43, 0x41, 0x44, 0x20, 0x00, 0x01, 0x01, 0x00, 0x01, 0x00, 0x03, 0x01,
+	0x02, 0x00, 0x01, 0x40, 0x70, 0x01, 0x4e, 0xb9, 0x00, 0x00, 0x0a, 0x2a, 0x20, 0x7c, 0x00, 0xf1,
+	0x80, 0x00, 0x3c, 0x3c, 0x0f, 0xff, 0x30, 0x3c, 0x00, 0x00, 0x61, 0x00, 0x01, 0x52, 0x66, 0x48,
+	0x20, 0x7c, 0x00, 0xf1, 0x80, 0x00, 0x3c, 0x3c, 0x0f, 0xff, 0x30, 0x3c, 0x55, 0x55, 0x61, 0x00,
+	0x01, 0x3e, 0x66, 0x34, 0x20, 0x7c, 0x00, 0xf1, 0x80, 0x00, 0x3c, 0x3c, 0x0f, 0xff, 0x30, 0x3c,
+	0xaa, 0xaa, 0x61, 0x00, 0x01, 0x2a, 0x66, 0x20, 0x20, 0x7c, 0x00, 0xf1, 0x80, 0x00, 0x3c, 0x3c,
+	0x0f, 0xff, 0x30, 0x3c, 0xff, 0xff, 0x61, 0x00, 0x01, 0x16, 0x66, 0x0c, 0x70, 0x00, 0x4e, 0xb9,
+	0x00, 0x00, 0x0a, 0x2a, 0x70, 0x00, 0x4e, 0x75, 0x70, 0x00, 0x4e, 0xb9, 0x00, 0x00, 0x0a, 0x2a,
+};
+
+static INT32 DinoInit()
+{
+	INT32 nRet = TwelveMhzInit();
+	
+	if (nRet == 0 && !EEPROMAvailable()) {
+		EEPROMFill(DinoEepromDefault, 0, sizeof(DinoEepromDefault));
+	}
+	
+	return nRet;
+}
+
+// Same for The Punisher ("Demo Sound" is byte 0x0f).
+static const UINT8 PunisherEepromDefault[128] = {
+	0x93, 0x04, 0x22, 0x02, 0x50, 0x55, 0x4e, 0x49, 0x53, 0x48, 0x45, 0x52, 0x00, 0x01, 0x00, 0x01,
+	0x00, 0x03, 0x01, 0x01, 0x01, 0xfd, 0x00, 0x00, 0xff, 0xfe, 0x00, 0x40, 0xfb, 0x9f, 0x00, 0x10,
+	0xdd, 0x9f, 0x00, 0x08, 0xff, 0xed, 0x00, 0x00, 0xdf, 0xf7, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
+	0xff, 0xff, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xf7, 0x7f, 0x00, 0x00, 0xff, 0x37, 0x00, 0x00,
+	0xbf, 0xfb, 0x00, 0x00, 0xfb, 0x7f, 0x00, 0x00, 0xff, 0xfb, 0x00, 0x00, 0xff, 0xef, 0x00, 0x00,
+	0xfe, 0xef, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0xff, 0xf3, 0x00, 0x20, 0xf7, 0xff, 0x00, 0x00,
+	0xff, 0xff, 0x00, 0x00, 0xff, 0x9f, 0x01, 0x00, 0xff, 0xbf, 0x00, 0x08, 0xff, 0xef, 0x00, 0x00,
+	0x7e, 0xfd, 0x00, 0x00, 0xfb, 0xfe, 0x00, 0x00, 0xfd, 0xbd, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
+};
+
+static INT32 PunisherInit()
+{
+	INT32 nRet = TwelveMhzInit();
+	
+	if (nRet == 0 && !EEPROMAvailable()) {
+		EEPROMFill(PunisherEepromDefault, 0, sizeof(PunisherEepromDefault));
+	}
+	
+	return nRet;
+}
+
 static INT32 CpsBootlegSpriteRamScanCallback(INT32 nAction, INT32*)
 {
 	if (nAction & ACB_MEMORY_RAM) {
@@ -16174,7 +16223,7 @@ struct BurnDriver BurnDrvCpsDino = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 3, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, DinoRomInfo, DinoRomName, NULL, NULL, DinoInputInfo, DinoDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	DinoInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
@@ -16184,7 +16233,7 @@ struct BurnDriver BurnDrvCpsDinoj = {
 	L"Cadillacs \u6050\u7ADC\u65B0\u4E16\u7D00\0Cadillacs Kyouryuu-Shinseiki (Cadillacs 930201 Japan)\0", NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 3, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, DinojRomInfo, DinojRomName, NULL, NULL, DinoInputInfo, DinoDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	DinoInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
@@ -16194,7 +16243,7 @@ struct BurnDriver BurnDrvCpsDinou = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 3, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, DinouRomInfo, DinouRomName, NULL, NULL, DinoInputInfo, DinoDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	DinoInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
@@ -16994,7 +17043,7 @@ struct BurnDriver BurnDrvCpsPunisher = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, PunisherRomInfo, PunisherRomName, NULL, NULL, PunisherInputInfo, PunisherDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	PunisherInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
@@ -17004,7 +17053,7 @@ struct BurnDriver BurnDrvCpsPunisheru = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, PunisheruRomInfo, PunisheruRomName, NULL, NULL, PunisherInputInfo, PunisherDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	PunisherInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
@@ -17014,7 +17063,7 @@ struct BurnDriver BurnDrvCpsPunisherj = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, PunisherjRomInfo, PunisherjRomName, NULL, NULL, PunisherInputInfo, PunisherDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	PunisherInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
@@ -17024,7 +17073,7 @@ struct BurnDriver BurnDrvCpsPunisherh = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_CAPCOM_CPS1_QSOUND, GBF_SCRFIGHT, 0,
 	NULL, PunisherhRomInfo, PunisherhRomName, NULL, NULL, PunisherInputInfo, PunisherDIPInfo,
-	TwelveMhzInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
+	PunisherInit, DrvExit, Cps1Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 

@@ -7314,6 +7314,8 @@ static const UINT8 Ssf2EepromDefault[128] = {
 
 static INT32 Ssf2Init()
 {
+	Ssf2 = 1;
+	
 	INT32 nRet = Cps2Init();
 	
 	nCpsGfxScroll[3] = 0;
@@ -7398,6 +7400,7 @@ static INT32 AvspInit()
 static INT32 DrvExit()
 {
 	Pzloop2 = 0;
+	Ssf2 = 0;
 	Ssf2t = 0;
 	Ssf2tb = 0;
 	Xmcota = 0;
@@ -11166,6 +11169,8 @@ static INT32 PhoenixInit()
 
 static INT32 Ssf2PhoenixInit()
 {
+	Ssf2 = 1;
+	
 	INT32 nRet = PhoenixInit();
 	
 	nCpsGfxScroll[3] = 0;

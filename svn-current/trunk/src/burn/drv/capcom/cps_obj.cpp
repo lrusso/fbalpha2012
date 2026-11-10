@@ -8,6 +8,9 @@ UINT8 *CpsBootlegSpriteRam = NULL;
 INT32 Cps1LockSpriteList910000 = 0;
 INT32 Cps1DetectEndSpriteList8000 = 0;
 
+INT32 Ssf2 = 0;
+static UINT32 Ssf2CoverPal[16];		// Filled with the backdrop colour, see Cps2ObjDraw
+
 Cps1ObjGetCallback Cps1ObjGetCallbackFunction = NULL;
 Cps1ObjDrawCallback Cps1ObjDrawCallbackFunction = NULL;
 
@@ -353,6 +356,29 @@ INT32 Cps2ObjDraw(INT32 nLevelFrom, INT32 nLevelTo)
 		// Find out sprite size
 		bx = ((a >> 8) & 15) + 1;
 		by = ((a >> 12) & 15) + 1;
+
+		// Super Street Fighter II: on the continue, taunt and game over screens the game hides the
+		// parts of a portrait that stick out of its frame with strips of tile 0x8090 (solid colour
+		// 0) in object palette 0x0A, and keeps that colour equal to the backdrop: black, white on
+		// the flashes after START, red on the game over flash. Its own data gets it wrong in two
+		// cases: during the countdown the colour is 0x111, a dark grey that is invisible on an
+		// arcade monitor but a visible box on an LCD, and when START is pressed while the screen
+		// is still fading in the strips flash grey or black on white, because their palette is
+		// still dimmed. Draw the strips in the colour the frame buffer already has at the bottom
+		// left corner of the screen, which is the backdrop on all of those screens.
+		if (Ssf2 && n == 0x8090 && (a & 0x1F) == 0x0A && bx == 1 && by == 1) {
+			UINT8 *pCorner = pBurnDraw + 223 * nBurnPitch;
+			UINT32 nCorner;
+			switch (nBurnBpp) {
+				case 2:  nCorner = *((UINT16*)pCorner); break;
+				case 3:  nCorner = pCorner[0] | (pCorner[1] << 8) | (pCorner[2] << 16); break;
+				default: nCorner = *((UINT32*)pCorner); break;
+			}
+			for (INT32 i = 0; i < 16; i++) {
+				Ssf2CoverPal[i] = nCorner;
+			}
+			CpstPal = Ssf2CoverPal;
+		}
 
 		// Take care with tiles if the sprite goes off the screen
 		if (x < 0 || y < 0 || x + (bx << 4) > 383 || y + (by << 4) > 223) {

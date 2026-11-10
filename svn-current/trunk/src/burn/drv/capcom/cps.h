@@ -387,6 +387,7 @@ INT32  FcrashObjDraw(INT32 nLevelFrom,INT32 nLevelTo);
 #define SCROLL_3 1
 extern INT32 Ghouls;
 extern INT32 Ssf2t;
+extern INT32 Ssf2;
 extern INT32 Xmcota;
 
 extern INT32 Scroll1TileMask;

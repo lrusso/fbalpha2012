@@ -359,25 +359,48 @@ INT32 Cps2ObjDraw(INT32 nLevelFrom, INT32 nLevelTo)
 
 		// Super Street Fighter II: on the continue, taunt and game over screens the game hides the
 		// parts of a portrait that stick out of its frame with strips of tile 0x8090 (solid colour
-		// 0) in object palette 0x0A, and keeps that colour equal to the backdrop: black, white on
-		// the flashes after START, red on the game over flash. Its own data gets it wrong in two
-		// cases: during the countdown the colour is 0x111, a dark grey that is invisible on an
-		// arcade monitor but a visible box on an LCD, and when START is pressed while the screen
-		// is still fading in the strips flash grey or black on white, because their palette is
-		// still dimmed. Draw the strips in the colour the frame buffer already has at the bottom
-		// left corner of the screen, which is the backdrop on all of those screens.
-		if (Ssf2 && n == 0x8090 && (a & 0x1F) == 0x0A && bx == 1 && by == 1) {
+		// 0) and rounds off the frame corners with triangles of tile 0x7FD5 (colour 7), both in
+		// object palette 0x0A, and keeps those colours equal to the backdrop: black, white on the
+		// flashes after START, red on the game over flash. Its own data gets this wrong in two
+		// cases: during the countdown the strip colour is 0x111, a dark grey that is invisible on
+		// an arcade monitor but a visible box on an LCD, and when START is pressed while the screen
+		// is still fading in, strips and triangles show grey or black on the white flashes because
+		// their palette is still dimmed. The backdrop is read from the frame buffer at the bottom
+		// left corner of the screen, which is background on all of those screens: the strips are
+		// always drawn in that colour, the triangles only when their colour is a dimmed white, or
+		// a dimmed black while the backdrop is pure white. Both are limited to the position of the
+		// continue screen's portrait frame (the loser is always shown on the left), so no other
+		// screen is affected.
+		if (Ssf2 && (a & 0x1F) == 0x0A && bx == 1 && by == 1 &&
+			((n == 0x8090 && x >= 16 && x <= 176 && y >= 80 && y <= 168) ||
+			 (n == 0x7FD5 && (x == 48 || x == 160) && (y == 144 || y == 152)))) {
 			UINT8 *pCorner = pBurnDraw + 223 * nBurnPitch;
-			UINT32 nCorner;
+			UINT32 nCorner, nWhite = BurnHighCol(0xFF, 0xFF, 0xFF, 0);
+			INT32 bCover = 0;
 			switch (nBurnBpp) {
 				case 2:  nCorner = *((UINT16*)pCorner); break;
 				case 3:  nCorner = pCorner[0] | (pCorner[1] << 8) | (pCorner[2] << 16); break;
 				default: nCorner = *((UINT32*)pCorner); break;
 			}
-			for (INT32 i = 0; i < 16; i++) {
-				Ssf2CoverPal[i] = nCorner;
+			if (n == 0x8090) {
+				bCover = 1;
+			} else {
+				UINT16 nColour = BURN_ENDIAN_SWAP_INT16(((UINT16*)CpsSavePal)[(0x0A << 4) + 7]);
+				if ((nColour >> 12) != 0x0F) {
+					if ((nColour & 0x0FFF) == 0x0FFF) {
+						nCorner = nWhite;
+						bCover = 1;
+					} else if ((nColour & 0x0FFF) == 0x0000 && nCorner == nWhite) {
+						bCover = 1;
+					}
+				}
 			}
-			CpstPal = Ssf2CoverPal;
+			if (bCover) {
+				for (INT32 i = 0; i < 16; i++) {
+					Ssf2CoverPal[i] = nCorner;
+				}
+				CpstPal = Ssf2CoverPal;
+			}
 		}
 
 		// Take care with tiles if the sprite goes off the screen
